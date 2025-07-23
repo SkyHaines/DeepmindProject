@@ -10,8 +10,8 @@ class DetectLine():
         self.vs = config.videostream
         return
     
-    def add_to_parser(self, parser):
-        parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')
+    #def add_to_parser(self, parser):
+        #parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')
         
     def run(self):
         while True:
@@ -28,8 +28,24 @@ class DetectLine():
             
             #Detect lines option 1
             alt_frame= cv2.cvtColor(alt_frame, cv2.COLOR_RGB2GRAY)
-            alt_frame = cv2.Canny(alt_frame, 100, 200)
+            alt_frame = cv2.Canny(alt_frame, 50, 150)
             
             #Detect lines option 2 ???
-            config.lines = cv2.HoughLinesP(alt_frame, 1, np.pi/180, threshold=50, minLineLength=40, maxLineGap=10)
+            lines = cv2.HoughLinesP(alt_frame, 1, np.pi/180, threshold=30, minLineLength=40, maxLineGap=50)
+            
+            # find centre?
+            screen_center = frame.shape[1] // 2
+            min_dist = float('inf')
+            closest_line = None
+            if lines is not None:
+                for line in lines:
+                    for x1, y1, x2, y2 in line:
+                        mid_line = (x1 + x2) // 2
+                        dist_to_center = abs(mid_line-screen_center)
+                        if dist_to_center < min_dist:
+                            min_dist = dist_to_center
+                            closest_line = (x1, y1, x2, y2)
+            
+            if closest_line is not None:
+                config.closest_line = closest_line
         return

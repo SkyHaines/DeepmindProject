@@ -67,10 +67,6 @@ class Detect:
             
         config.interpreter = self.interpreter
         self.vs = config.videostream
-        while self.vs is None:
-            self.vs = config.videostream
-            print("detect - vs.read is none")
-        
         
         return
         
@@ -79,6 +75,10 @@ class Detect:
             # Get pre-processing time for fps calc
             initial_time = time.time()
             
+            if self.vs is None:
+                print("detect - vs.read is none")
+                self.vs = config.videostream
+                continue
             frame1 = self.vs.read()
             
             # Detection
@@ -107,5 +107,5 @@ class Detect:
         return     
     
     # could probably inherit this from a superclass
-    def add_to_parser(self, parser):
-        parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')
+    #def add_to_parser(self, parser):
+        #parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')

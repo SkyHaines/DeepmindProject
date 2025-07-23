@@ -15,3 +15,4 @@ frame_rate_calc = 1
 lines = None
 videostream = None
 fps = 0
+closest_line = None

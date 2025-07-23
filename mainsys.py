@@ -58,7 +58,7 @@ def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
     plugins = []
     for MODULE in PLUGIN_MODULES:
         plugin = load_plugin(MODULE[0], MODULE[1])
-        plugin.add_to_parser(parser)
+        #plugin.add_to_parser(parser)
         plugins.append(plugin)
 
     graphics = []
