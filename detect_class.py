@@ -67,15 +67,18 @@ class Detect:
             
         config.interpreter = self.interpreter
         self.vs = config.videostream
+        while self.vs is None:
+            self.vs = config.videostream
+            print("detect - vs.read is none")
+        
         
         return
         
     def run(self):
         while True:
-            if self.vs is None:
-                print("detect - vs.read is none")
-                self.vs = config.videostream
-                continue
+            # Get pre-processing time for fps calc
+            initial_time = time.time()
+            
             frame1 = self.vs.read()
             
             # Detection
@@ -96,6 +99,11 @@ class Detect:
             config.boxes = self.interpreter.get_tensor(self.output_details[self.boxes_idx]['index'])[0] # Bounding box coordinates of detected objects
             config.classes = self.interpreter.get_tensor(self.output_details[self.classes_idx]['index'])[0] # Class index of detected objects
             config.scores = self.interpreter.get_tensor(self.output_details[self.scores_idx]['index'])[0] # Confidence
+        
+            # Get elapsed time for fps calc
+            elapsed_time = time.time() - initial_time
+            config.fps = 1 / elapsed_time
+        
         return     
     
     # could probably inherit this from a superclass

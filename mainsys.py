@@ -12,11 +12,13 @@ from videostream import VideoStream
 # ------------- MODULE IMPORTS ----------------
 # module path, class name
 PLUGIN_MODULES = [
-    ("detect_class", "Detect"),
+    #("detect_class", "Detect"),
+    ("detect_line_class","DetectLine"),
     ("action", "Act")
 ]
 GRAPHICS_MODULES = [
-    ("graphics_class", "Graphics")
+    #("graphics_class", "Graphics")
+    ("graphics_highlight_line_class", "GraphicsHighlightLine")
 ]
 # --------------------------------------------
         
