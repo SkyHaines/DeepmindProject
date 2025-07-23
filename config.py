@@ -1,0 +1,17 @@
+MODEL_NAME = None
+GRAPH_NAME = None
+LABELMAP_NAME = None
+min_conf_threshold = None
+resW, resH = None, None
+imW, imH = None, None
+use_TPU = None
+interpreter = None
+currentFrame = None
+boxes = None
+classes = None
+scores = None
+labels = None
+frame_rate_calc = 1
+lines = None
+videostream = None
+fps = 0
