@@ -8,6 +8,7 @@ import importlib.util
 import config
 import threading
 from videostream import VideoStream
+import kb
 
 # ------------- MODULE IMPORTS ----------------
 # module path, class name
@@ -41,7 +42,8 @@ def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
     
     args = parser.parse_args()
     
-    #Set config vals
+    #Initialised knowledge base and store setup knowledge
+    
     config.MODEL_NAME = args.modeldir
     config.GRAPH_NAME = args.graph
     config.LABELMAP_NAME = args.labels
