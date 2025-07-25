@@ -6,18 +6,18 @@ import sys
 import time
 from threading import Thread
 import importlib.util
-import config
+import kb
 from mainsys import VideoStream
 
 class Detect: 
     def __init__(self):
-        # Load config vals
+        # Load relevant data from knowledge base
         pkg = importlib.util.find_spec('tflite_runtime')
-        use_TPU = config.use_TPU
-        GRAPH_NAME = config.GRAPH_NAME
-        MODEL_NAME = config.MODEL_NAME
-        min_conf_threshold = config.min_conf_threshold
-        imW, imH = config.imW, config.imH
+        use_TPU = kb.get(use_TPU)
+        GRAPH_NAME = kb.get(GRAPH_NAME)
+        MODEL_NAME = kb.get(MODEL_NAME)
+        min_conf_threshold = kb.get(min_conf_threshold)
+        imW, imH = kb.get(imW), kb.get(imH)
         
         if pkg:
             from tflite_runtime.interpreter import Interpreter
@@ -39,7 +39,6 @@ class Detect:
         if use_TPU:
             self.interpreter = Interpreter(model_path=PATH_TO_CKPT,
                                   experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
-        #print(PATH_TO_CKPT)
         else:
             self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
 
@@ -50,9 +49,7 @@ class Detect:
         self.output_details = self.interpreter.get_output_details()
         self.height = self.input_details[0]['shape'][1]
         self.width = self.input_details[0]['shape'][2]
-
         self.floating_model = (self.input_details[0]['dtype'] == np.float32)
-
         self.input_mean = 127.5
         self.input_std = 127.5
 
@@ -65,9 +62,8 @@ class Detect:
         else: # This is a TF1 model
             self.boxes_idx, self.classes_idx, self.scores_idx = 0, 1, 2
             
-        config.interpreter = self.interpreter
-        self.vs = config.videostream
-        
+        kb.set(interpreter, self.interpreter)
+        self.vs = kb.get(videostream)  
         return
         
     def run(self):
@@ -77,7 +73,7 @@ class Detect:
             
             if self.vs is None:
                 print("detect - vs.read is none")
-                self.vs = config.videostream
+                self.vs = kb.get(videostream)
                 continue
             frame1 = self.vs.read()
             

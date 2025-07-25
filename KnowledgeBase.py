@@ -6,13 +6,13 @@ class KB():
         self.lock = threading.Lock()
         return
     
-    def store_var(self, var_name, data):
+    def store(self, var_name, data):
         with self.lock:
             self.db[var_name] = data
-        print("Updated variable", var_name, "to ", data)
+        #print("Updated variable", var_name, "to ", data)
         return
     
-    def get_var(self, var_name):
+    def get(self, var_name):
         with self.lock:
             if var_name in self.db.keys():
                 return self.db[var_name]

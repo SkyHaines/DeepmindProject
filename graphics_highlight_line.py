@@ -1,8 +1,9 @@
-import config
+import kbSingleton
 import cv2
 
 def main():
-    return highlightLines(config.currentFrame, lines)
+    kb = kbSingleton.kb_instance
+    return highlightLines(kb.get('currentFrame'), lines)
     
 def highlightLines(image, lines, colour=[255,0,0], thickness=3):
     img = np.copy(image)

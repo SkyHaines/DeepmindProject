@@ -1,4 +1,4 @@
-import config
+import kb
 import cv2
 import os
 
@@ -8,31 +8,31 @@ class Graphics():
         
         # Find and store labelmap to config
         CWD_PATH = os.getcwd()
-        PATH_TO_LABELS = os.path.join(CWD_PATH,config.MODEL_NAME,config.LABELMAP_NAME)
+        PATH_TO_LABELS = os.path.join(CWD_PATH,kb.get(MODEL_NAME),kb.get(LABELMAP_NAME))
         with open(PATH_TO_LABELS, 'r') as f:
             labels = [line.strip() for line in f.readlines()]
         if labels[0] == '???':
             del(labels[0])
-        config.labels = labels
+        kb.set(labels, labels)
         
         return
     
     def draw(self, frame):
         # Retrieve data to draw with
-        interpreter = config.interpreter
+        interpreter = kb.get(interpreter)
         if interpreter is None:
             print("Interpreter not ready")
             return
         output_details = interpreter.get_output_details()
-        boxes = config.boxes
-        classes = config.classes
-        scores = config.scores
+        boxes = kb.get(boxes)
+        classes = kb.get(classes)
+        scores = kb.get(scores)
         if scores is None:
             print("Detection not ready")
             return
-        min_conf_threshold = config.min_conf_threshold
-        resW, resH = config.resW, config.resH
-        imW, imH = config.imW, config.imH
+        min_conf_threshold = kb.get(min_conf_threshold)
+        resW, resH = kb.get(resW), kb.get(resH)
+        imW, imH = kb.get(imW), kb.get(imH)
         
         # Loop over all detections and draw detection box if confidence is above minimum threshold
         for i in range(len(scores)):
@@ -47,7 +47,7 @@ class Graphics():
                 cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
 
                 # Draw label
-                object_name = config.labels[int(classes[i])] # Look up object name from "labels" array using class index
+                object_name = kb.get(labels)[int(classes[i])] # Look up object name from "labels" array using class index
                 label = '%s: %d%%' % (object_name, int(scores[i]*100)) # Example: 'person: 72%'
                 labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
                 label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window

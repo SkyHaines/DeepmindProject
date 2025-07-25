@@ -1,4 +1,4 @@
-import config
+import kbSingleton
 import cv2
 import numpy as np
 
@@ -7,17 +7,19 @@ import numpy as np
 
 class DetectLine():
     def __init__(self):
-        self.vs = config.videostream
+        kb = kbSingleton.kb_instance
+        self.vs = kb.get('videostream')
         return
     
     #def add_to_parser(self, parser):
         #parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')
         
     def run(self):
+        kb = kbSingleton.kb_instance
         while True:
             if self.vs is None:
                 print("detect - vs.read is none")
-                self.vs = config.videostream
+                self.vs = kb.get('videostream')
                 continue
             frame1 = self.vs.read()
             frame = frame1.copy()
@@ -47,5 +49,5 @@ class DetectLine():
                             closest_line = (x1, y1, x2, y2)
             
             if closest_line is not None:
-                config.closest_line = closest_line
+                kb.store('closest_line', closest_line)
         return

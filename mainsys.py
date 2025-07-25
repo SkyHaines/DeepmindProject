@@ -8,7 +8,7 @@ import importlib.util
 import config
 import threading
 from videostream import VideoStream
-import kb
+import kbSingleton
 
 # ------------- MODULE IMPORTS ----------------
 # module path, class name
@@ -38,19 +38,20 @@ def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
                         default='1280x720')
     parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed up detection',
                         action='store_true')
-    parser.add_argument('--graphics', default='graphics.py')
     
     args = parser.parse_args()
     
     #Initialised knowledge base and store setup knowledge
-    
-    config.MODEL_NAME = args.modeldir
-    config.GRAPH_NAME = args.graph
-    config.LABELMAP_NAME = args.labels
-    config.min_conf_threshold = float(args.threshold)
-    config.resW, config.resH = args.resolution.split('x')
-    config.imW, config.imH = int(config.resW), int(config.resH)
-    config.use_TPU = args.edgetpu
+    kb = kbSingleton.kb_instance
+    kb.store('MODEL_NAME', args.modeldir)
+    kb.store('GRAPH_NAME', args.graph)
+    kb.store('LABELMAP_NAME', args.labels)
+    kb.store('min_conf_threshold', float(args.threshold))
+    kb.store('resW', args.resolution.split('x')[0]),
+    kb.store('resH', args.resolution.split('x')[1])
+    kb.store('imW', int(kb.get('resW')))
+    kb.store('imH', int(kb.get('resH')))
+    kb.store('use_TPU', args.edgetpu)
     
     def load_plugin(module_path, class_name):
         module = importlib.import_module(module_path)
@@ -60,7 +61,6 @@ def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
     plugins = []
     for MODULE in PLUGIN_MODULES:
         plugin = load_plugin(MODULE[0], MODULE[1])
-        #plugin.add_to_parser(parser)
         plugins.append(plugin)
 
     graphics = []
@@ -71,12 +71,13 @@ def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
     return plugins, graphics
  
 def main():
+    kb = kbSingleton.kb_instance
     plugins, graphics = initialise(PLUGIN_MODULES, GRAPHICS_MODULES)
     
     # Initialize video stream
-    videostream = VideoStream(resolution=(config.imW,config.imH),framerate=30).start()
+    videostream = VideoStream(resolution=(kb.get('imW'),kb.get('imH')),framerate=30).start()
     videostream.wait_for_initialise()
-    config.videostream = videostream
+    kb.store('videostream', videostream)
     
     freq = cv2.getTickFrequency()
     
