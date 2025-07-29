@@ -28,6 +28,8 @@ class GraphicsHighlightLine():
         
         # Adds circle to middle of frame for reference 
         cv2.circle(line_img, (frame.shape[1]//2,(3*frame.shape[0])//4), radius=5, color=[0,0,255], thickness=15)
+        kb.store('screen_center', (frame.shape[1]//2,(3*frame.shape[0])//4))
+        #print("frame.shape: ", frame.shape)
         
         # Overlays transparent image with highlights onto original frame
         img = cv2.addWeighted(frame, 0.8, line_img, 1.0, 0.0)

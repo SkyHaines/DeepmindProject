@@ -83,6 +83,7 @@ def main():
     
     # Initialise plugin threads
     threads = []
+    print("Plugins", plugins)
     for plugin in plugins:
         #plugin_instance = plugin
         thread = threading.Thread(target=plugin.run, daemon=True)
