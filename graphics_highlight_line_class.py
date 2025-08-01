@@ -1,9 +1,10 @@
 import kbSingleton
+from pluginBases import GraphicsPlugin
 import cv2
 import numpy as np
 import time
 
-class GraphicsHighlightLine():
+class GraphicsHighlightLine(GraphicsPlugin):
     def __init__(self, colour=[0,255,0], thickness=5):
         self.colour = colour
         self.thickness = thickness

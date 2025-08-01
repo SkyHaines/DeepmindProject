@@ -1,8 +1,9 @@
 from pyboard import Pyboard
+from pluginBases import BehaviourPlugin
 import time
 import kbSingleton
 
-class Act():
+class Act(BehaviourPlugin):
     def __init__(self):
         print("Action init func")
         self.kb = kbSingleton.kb_instance
@@ -13,8 +14,8 @@ class Act():
         self.pyb.enter_raw_repl()
         return
     
-    def add_to_parser(self, parser):
-        parser.add_argument('--actiondir', help='Specify act/movement control file', default=None)
+    def add_parser_params(self, parser):
+        return
         
     def run(self):
         print("action run func")
@@ -26,7 +27,7 @@ class Act():
                 line = self.kb.get('closest_line')
                 screen_center = self.kb.get('screen_center')
                 if (line is not None) & (screen_center is not None):
-                    line_midpoint = (line[0]+(line[1]-line[0])/2), (line[2]+(line[3]-line[2])/2)
+                    line_midpoint = (((line[0]+line[2])/2), ((line[1]+line[3])/2))
                     self.move_pair_to_point(self.pyb, line_midpoint, screen_center)
                     time.sleep(0.5)
         
@@ -59,14 +60,18 @@ motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
     def move_pair_to_point(self, pyb, point, center):
         # Control logic to adjust direction to face point based on current middle of screen.
         dx = point[0] - center[0]
-        dy = point[1] - center[1]
-        print("dx = ", dx, "dy: ", dy, "point: ", point, "center: ", center)
         normalised_dx = dx / center[0]
-        print("normalised dx: ", normalised_dx)
         steering = int(normalised_dx * 100)
-        print(steering)
-        # speed 
-        speed = 1000
         
-        command = f"""motor_pair.move_for_time(motor_pair.PAIR_1, {speed}, 0 , velocity= 280)"""
-        #pyb.exec(command.encode())
+#         command = f"""
+# from hub import light_matrix
+# 
+# light_matrix.write("aa")
+# motor_pair.move(motor_pair.PAIR_1, steering=50, velocity=100)""
+        command = f"""\
+from hub import port
+import motor_pair, time
+
+motor_pair.move_for_time(motor_pair.PAIR_1, 1000, {steering} , velocity= 280)
+"""
+        pyb.exec(command)

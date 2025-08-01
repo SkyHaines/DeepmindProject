@@ -102,6 +102,15 @@ class Detect:
         
         return     
     
-    # could probably inherit this from a superclass
-    #def add_to_parser(self, parser):
-        #parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')
+    def add_parser_params(self, parser):
+        parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')
+        parser.add_argument('--threshold', help='Minimum confidence threshold for displaying detected objects',
+                        default=0.5)
+        parser.add_argument('--graph', help='Name of the .tflite file, if different than detect.tflite',
+                        default='detect.tflite')
+        parser.add_argument('--labels', help='Name of the labelmap file, if different than labelmap.txt',
+                        default='labelmap.txt')
+        parser.add_argument('--modeldir', help='Folder the .tflite file is located in',
+                        required=True)
+        return
+        

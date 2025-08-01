@@ -1,18 +1,19 @@
 import kbSingleton
+from pluginBases import BehaviourPlugin
 import cv2
 import numpy as np
 
 # There is a decent amount of duplicated code across detect functions, perhaps this should
 # be inherited from an absrtact class.
 
-class DetectLine():
+class DetectLine(BehaviourPlugin):
     def __init__(self):
         kb = kbSingleton.kb_instance
         self.vs = kb.get('videostream')
         return
     
-    #def add_to_parser(self, parser):
-        #parser.add_argument('--detectdir', help='Specify detection file',default='detect.py')
+    def add_parser_params(self, parser):
+        return
         
     def run(self):
         kb = kbSingleton.kb_instance

@@ -24,50 +24,37 @@ GRAPHICS_MODULES = [
 # --------------------------------------------
         
 def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
-    # Define and parse input arguments
+    # Define input arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--modeldir', help='Folder the .tflite file is located in',
-                        required=True)
-    parser.add_argument('--graph', help='Name of the .tflite file, if different than detect.tflite',
-                        default='detect.tflite')
-    parser.add_argument('--labels', help='Name of the labelmap file, if different than labelmap.txt',
-                        default='labelmap.txt')
-    parser.add_argument('--threshold', help='Minimum confidence threshold for displaying detected objects',
-                        default=0.5)
     parser.add_argument('--resolution', help='Desired webcam resolution in WxH. If the webcam does not support the resolution entered, errors may occur.',
-                        default='1280x720')
+                        default='720x480')
     parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed up detection',
                         action='store_true')
-    
-    args = parser.parse_args()
-    
-    #Initialised knowledge base and store setup knowledge
-    kb = kbSingleton.kb_instance
-    kb.store('MODEL_NAME', args.modeldir)
-    kb.store('GRAPH_NAME', args.graph)
-    kb.store('LABELMAP_NAME', args.labels)
-    kb.store('min_conf_threshold', float(args.threshold))
-    kb.store('resW', args.resolution.split('x')[0]),
-    kb.store('resH', args.resolution.split('x')[1])
-    kb.store('imW', int(kb.get('resW')))
-    kb.store('imH', int(kb.get('resH')))
-    kb.store('use_TPU', args.edgetpu)
     
     def load_plugin(module_path, class_name):
         module = importlib.import_module(module_path)
         instantiated = getattr(module, class_name)
         return instantiated()
     
+    # Load & instantiate plugins
     plugins = []
     for MODULE in PLUGIN_MODULES:
         plugin = load_plugin(MODULE[0], MODULE[1])
         plugins.append(plugin)
+        plugin.add_parser_params(parser)
 
     graphics = []
     for MODULE in GRAPHICS_MODULES:
         module = load_plugin(MODULE[0], MODULE[1])
         graphics.append(module)
     
+    args = parser.parse_args()
+    
+    #Initialised knowledge base and store setup knowledge
+    kb = kbSingleton.kb_instance
+    for key, value in vars(args).items():
+        kb.store(key, value)
+
     return plugins, graphics
  
 def main():
