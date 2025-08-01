@@ -1,0 +1,153 @@
+\documentclass[10pt]{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[hmargin=2cm]{geometry}
+\newcommand{\divider}{\vskip2pt\hrule\vskip2pt}
+\usepackage{hyperref}
+
+\title{Project documentation for Google Deepmind internship project - Developing a modular software system facilitating plugin behavioural models for a rasperry pi powered LEGO.}
+\author{Sky Haines}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\divider
+
+\section*{Problem domain}
+
+Problem: Current autonomous robots are hard-coded. Thus, in order to test out a new object detector, camera, processing module etc it can be costly and take significant time investment. This slows iterative testing, limiting research progress.
+
+\section*{Solution}
+
+This small, Lego robot.
+
+\subsection*{Hardware overview}
+
+Structure constructed of Lego bricks.
+Lego blocks are very easy to physically swap by hand, requiring no/very little learning curve. Thus, the whole physical shape of the robot can be modified at will. This facilitates rapid iterative testing \& prototyping.
+
+Central processing unit is a Raspberry Pi. Can connect via SSH to remotely control the robot after connecting to the custom raspi-webgui network. 
+
+Coral Edge TPU Accelerator (Tensor processing unit), to relieve computational load on the Pi processor, improving processing speeds of TFLite object detection models. This does mean the system is limited to either very basic detection or custom TFLite models as otherwise the processing speeds restrict real-time applications (especially in the use case here, where the robot is expected to appropriately respond to the changing environment as it moves).
+
+Pi Camera enables the robot to visually perceive its surroundings. Camera lens can be swapped out for others, supporting the main use case of easy, modular testing.
+
+LEGO Hub, connected to the Pi via a Serial link. The hub has 6 ports, with 2 occupied by motor wheel attachments and another occupied by a distance sensor.
+
+\subsection*{System architecture overview}
+
+The idea is that there is a main system, mainsys.py, that completes most of the `behind the scenes' tasks. It is responsible for most if not all system behaviour that would not generally require alterations to test out different ideas. It takes in the names of whatever 'plug-in modules' that the user wants the robot to run, and runs these as threads \textbf{(currently working on threading technicalities)}. It can also optionally display the camera video stream to the user, allowing for easier debugging.
+
+'Plug-in modules' are, at a high level, the robots behaviour. For example, a test setup may include an object detector plug-in, a planning plug-in (that decides and 'plans' where the robot should move to based on the detection results) and an action plugin (that interacts with the Lego Hub to move the robot based on what the planner decides is the correct response to the environment). Whilst these functionalities could all be placed into one function and run together, the 'plug-in' architecture is intended to allow each component to be easily 'swapped out' for another, reducing the risk of unintentionally modifying code responsible for something else when making changes.
+\\
+
+\divider
+
+\section*{\texttt{Mainsys.py}}
+\label{sec:Mainsys.py}
+Main system file. Accepts and initializes the plug-in robot functionality modules (detect, action, etc) as threads. Stores setup knowledge to \nameref{sec:KnowledgeBase.py}. Initialises videostream thread. Calls graphics modules and displays output frame.
+\\
+\\
+Accepts and parses parameters:
+\begin{itemize}
+    \item \texttt{--modeldir}: Folder the tflite file is located in.
+    \item \texttt{--graph}: Name of the tflite file, if differs from the default of detect.py.
+    \item \texttt{--labels}: Name of the labelmap file, if differs from the default of labelmap.txt.
+    \item \texttt{--threshold}: Minimum confidence threshold for displaying objects.
+    \item \texttt{--resolution}: Resolution of output stream in WxH.
+    \item \texttt{--edgetpu}: Use Coral Edge TPU Accelerator to improve detection performance (TFLite models only).
+\end{itemize}
+
+\textbf{PARAMETERS UNDER REVIEW:} threshold is obj detection specific, doesnt make sense to have it here. modeldir is required even when not used (detectline class does not use an ai model, just hough line transform). graph and labels would be redundant if no model dir, also names are ambiguous.
+
+\section{Data storage}
+
+\subsection{\texttt{KnowledgeBase.py}}
+\label{sec:KnowledgeBase.py}
+
+Intended to serve as a central source of knowledge, accessible by any plugged-in component via a thread-safe dictionary structure. This allows plug-in modules to freely create and access custom global variables. (Supports usecase).
+Provides standard getter and setter functions. 
+
+\textbf{Add storage options ??}
+
+\subsection{\texttt{kb.py}}
+\label{sec:kb.py}
+
+Singleton instance of \nameref{sec:KnowledgeBase.py}, imported by all modules requiring access to central data store.
+
+\section{Plugin modules}
+
+To ensure plugin compatability with \nameref{sec:Mainsys.py}, all plugins should inherit from the appropriate abstract class. Abstract classes are located in \texttt{pluginBases.py}, and are structured as follows:
+
+\begin{itemize}
+    \item BehaviourPlugin : To be inherited from by all sense, detect, plan and action plugins. 
+    \begin{itemize}
+    \item \texttt{add\_parser\_params(self, parser)}
+    \item \texttt{run(self)}
+    \end{itemize}
+    \item GraphicsPlugin : To be inherited from by all graphics display plugins.
+    
+\end{itemize}
+
+All plugins requiring access to the central data store should run:\\ 
+\begin{verbatim}
+import kbSingleton 
+self.kb = kbSingleton.kb_instance
+\end{verbatim}
+
+with access/store commands detailed below in, %name ref 
+
+\hfill
+
+It is important to note that there is an unknown compatability issue when running pyb.exec(command), in which the command utilises any motor\_pair commands. These will prompt an OSError 1 EPERM unless the user writes two or more characters to the hub display, using light\_matrix\_write('aa') beforehand.The specifics of why this happens, or why this workaround is successful is unknown at this stage, but can be hypothesised that it involves some internal state of the hub requiring updating, which the light\_matrix\_display command does.
+
+\subsection{\texttt{detect\_class.py}}
+\label{sec:detect_class.py}
+
+Object detector module. Currently only tested with standard sample TFLite model.
+\\
+\texttt{\_\_init\_\_()}: Loads required data from \nameref{sec:KnowledgeBase.py}. Initialises TFLite model and interpreter.
+\\\texttt{run()}: Computes box, class and score data. Stores to \nameref{sec:KnowledgeBase.py}.
+
+\subsection{\texttt{graphics\_class.py}}
+\label{sec:graphics_class.py}
+
+Graphical display module, for displaying \nameref{sec:detect_class.py} object detection data. 
+\\
+\texttt{\_\_init\_\_()}: Establishes a path to and opens labelmap file.
+\\\texttt{draw(frame)}: Retrieves detection data stored by \nameref{sec:detect_class.py} to \nameref{sec:KnowledgeBase.py}. Uses detection data to draw respective boxes onto the video frame. Outputs resulting frame.
+
+\subsection{\texttt{detect\_line\_class.py}}
+\label{sec:detect_line_class.py}
+
+Line detector module.
+\\
+\texttt{\_\_init\_\_()}
+\\\texttt{run()}: Uses cv2.Canny(...) and cv2.HoughLinesP(...) to identify high-contrast areas in the frame, signifying an 'edge' is detected. Only does so for the lower half of the frame, with the aim of conserving computational resources, as this is where the 'floor' should be in the image. 
+\\Currently returns the edge found that is closest to the middle of the frame. \textbf{To be modified maybe ?}
+
+\subsection{\texttt{graphics\_highlight\_line\_class.py}}
+\label{sec:graphics_highlight_line_class.py}
+
+Graphical display module, for displaying \nameref{sec:detect_line_class.py} line detection data.
+\\
+\texttt{\_\_init\_\_()}: Establishes line colour and thickness.
+\\\texttt{draw(frame)}: Retrieves line data to be displayed from \nameref{sec:KnowledgeBase.py}. Highlights line onto the frame.
+
+\subsection{\texttt{action.py}}
+\label{sec:action.py}
+
+\textbf{Under development.}
+
+\divider 
+
+\section*{Aims:}
+
+The project aims can be summarised as follows:
+\begin{itemize}
+    \item `develop a reusable software platform structured in a way as to support others to develop modules for, perception, understanding and decision making. The platform should also be written in a way which allows for the software to be deployed on multiple Lego robots without having to change the underlying software structure. As part of this project you may make use of third part ML components or develop your own as appropriate.'
+    \item Create modules that can be plugged into the main software to make the robot follow a line on the floor in the lab, identify and act upon road signs, and potentially identify (and not run over) a lego man.
+\end{itemize}
+
+\end{document}

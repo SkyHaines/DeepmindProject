@@ -15,11 +15,11 @@ import kbSingleton
 PLUGIN_MODULES = [
     #("detect_class", "Detect"),
     ("detect_line_class","DetectLine"),
-    ("action", "Act")
+    #("action", "Act")
 ]
 GRAPHICS_MODULES = [
     #("graphics_class", "Graphics")
-    ("graphics_highlight_line_class", "GraphicsHighlightLine")
+    #("graphics_highlight_line_class", "GraphicsHighlightLine")
 ]
 # --------------------------------------------
         
@@ -66,6 +66,9 @@ def main():
     videostream.wait_for_initialise()
     kb.store('videostream', videostream)
     
+    # saved frames
+    frame_count = 98
+    
     freq = cv2.getTickFrequency()
     
     # Initialise plugin threads
@@ -87,8 +90,26 @@ def main():
             cv2.imshow('Object detector', frame)        
         
         #Press 'q' to quit
-        if cv2.waitKey(1) == ord('q'):
+        if cv2.waitKey(10) == ord('q'):
             break
+        
+        #Press 's' to screenshot 
+        if cv2.waitKey(30) == 115:
+            filename = f"frame_{frame_count:04d}.png"
+            filepath = os.path.join('imgs', filename)
+            cv2.imwrite(filepath, frame)
+            frame_count += 1
+            print("Saved frame as: frame_", frame_count)
+        
+        # inc framecount if uparrow
+        if cv2.waitKey(20) == 82:
+            frame_count += 1
+            print("Increased frame_count to:", frame_count)
+            
+        # dec framecount if down arrow
+        if cv2.waitKey(20) == 84:
+            frame_count -= 1
+            print("Decreased frame_count to:", frame_count)
         
     # Clean up
     cv2.destroyAllWindows()
