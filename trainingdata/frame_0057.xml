@@ -1,0 +1,50 @@
+<annotation>
+	<folder>trainingimgs</folder>
+	<filename>frame_0057.png</filename>
+	<path>C:\Users\PC User\DeepmindProj\trainingimgs\frame_0057.png</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>480</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Warning</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>108</xmin>
+			<ymin>148</ymin>
+			<xmax>380</xmax>
+			<ymax>396</ymax>
+		</bndbox>
+	</object>
+	<object>
+		<name>Lego Man</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>373</xmin>
+			<ymin>324</ymin>
+			<xmax>401</xmax>
+			<ymax>379</ymax>
+		</bndbox>
+	</object>
+	<object>
+		<name>Roadworks</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>328</xmin>
+			<ymin>205</ymin>
+			<xmax>361</xmax>
+			<ymax>242</ymax>
+		</bndbox>
+	</object>
+</annotation>
