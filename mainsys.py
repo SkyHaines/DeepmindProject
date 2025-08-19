@@ -5,7 +5,6 @@ import numpy as np
 import sys
 import time
 import importlib.util
-import config
 import threading
 from videostream import VideoStream
 import kbSingleton
@@ -13,12 +12,12 @@ import kbSingleton
 # ------------- MODULE IMPORTS ----------------
 # module path, class name
 PLUGIN_MODULES = [
-    #("detect_class", "Detect"),
-    ("detect_line_class","DetectLine"),
+    ("detect_class", "Detect"),
+    #("detect_line_class","DetectLine"),
     #("action", "Act")
 ]
 GRAPHICS_MODULES = [
-    #("graphics_class", "Graphics")
+    ("graphics_class", "Graphics")
     #("graphics_highlight_line_class", "GraphicsHighlightLine")
 ]
 # --------------------------------------------
@@ -35,14 +34,16 @@ def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
         module = importlib.import_module(module_path)
         instantiated = getattr(module, class_name)
         return instantiated()
-    
+    print("PLUGIN MODULES:", PLUGIN_MODULES)
     # Load & instantiate plugins
     plugins = []
     for MODULE in PLUGIN_MODULES:
+        print("?")
         plugin = load_plugin(MODULE[0], MODULE[1])
+        print("plugin:", plugin)
         plugins.append(plugin)
         plugin.add_parser_params(parser)
-
+    print("helo")
     graphics = []
     for MODULE in GRAPHICS_MODULES:
         module = load_plugin(MODULE[0], MODULE[1])
@@ -52,9 +53,16 @@ def initialise(PLUGIN_MODULES, GRAPHICS_MODULES):
     
     #Initialised knowledge base and store setup knowledge
     kb = kbSingleton.kb_instance
+    print("args:",vars(args).items())
     for key, value in vars(args).items():
         kb.store(key, value)
-
+        
+    resW, resH = args.resolution.split('x')
+    kb.store('resW', resW)
+    kb.store('resH', resH)
+    kb.store('imW', int(resW))
+    kb.store('imH', int(resH))
+    print("DATABASE:", kb.get_db())
     return plugins, graphics
  
 def main():
@@ -67,7 +75,7 @@ def main():
     kb.store('videostream', videostream)
     
     # saved frames
-    frame_count = 98
+    frame_count = 150
     
     freq = cv2.getTickFrequency()
     
@@ -90,7 +98,7 @@ def main():
             cv2.imshow('Object detector', frame)        
         
         #Press 'q' to quit
-        if cv2.waitKey(10) == ord('q'):
+        if cv2.waitKey(1) == ord('q'):
             break
         
         #Press 's' to screenshot 

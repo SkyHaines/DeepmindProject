@@ -17,7 +17,7 @@ class KB():
             if var_name in self.db.keys():
                 return self.db[var_name]
             else:
-                print("Variable ", var_name, "does not exist in database.")
+                #print("Variable ", var_name, "does not exist in database.")
                 return None
         
     def get_db(self):

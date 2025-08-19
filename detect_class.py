@@ -6,18 +6,26 @@ import sys
 import time
 from threading import Thread
 import importlib.util
-import kb
+import kbSingleton
 from mainsys import VideoStream
 
-class Detect: 
+class Detect:
     def __init__(self):
+        return
+    
+    def initialise(self):
         # Load relevant data from knowledge base
-        pkg = importlib.util.find_spec('tflite_runtime')
-        use_TPU = kb.get(use_TPU)
-        GRAPH_NAME = kb.get(GRAPH_NAME)
-        MODEL_NAME = kb.get(MODEL_NAME)
-        min_conf_threshold = kb.get(min_conf_threshold)
-        imW, imH = kb.get(imW), kb.get(imH)
+        print("detect init")
+        kb = kbSingleton.kb_instance
+        while(True):
+            if (kb.get('imW')) is not None:
+                pkg = importlib.util.find_spec('tflite_runtime')
+                use_TPU = kb.get('edgetpu')
+                GRAPH_NAME = kb.get('graph')
+                MODEL_NAME = kb.get('modeldir')
+                min_conf_threshold = kb.get('min_conf_threshold')
+                imW, imH = kb.get('imW'), kb.get('imH')
+                break
         
         if pkg:
             from tflite_runtime.interpreter import Interpreter
@@ -62,18 +70,20 @@ class Detect:
         else: # This is a TF1 model
             self.boxes_idx, self.classes_idx, self.scores_idx = 0, 1, 2
             
-        kb.set(interpreter, self.interpreter)
-        self.vs = kb.get(videostream)  
+        kb.store('interpreter', self.interpreter)
+        self.vs = kb.get('videostream')  
         return
         
     def run(self):
+        kb = kbSingleton.kb_instance
+        self.initialise()
         while True:
             # Get pre-processing time for fps calc
             initial_time = time.time()
             
             if self.vs is None:
                 print("detect - vs.read is none")
-                self.vs = kb.get(videostream)
+                self.vs = kb.get('videostream')
                 continue
             frame1 = self.vs.read()
             
@@ -92,14 +102,18 @@ class Detect:
             self.interpreter.invoke()
             
             # Save detection results
-            config.boxes = self.interpreter.get_tensor(self.output_details[self.boxes_idx]['index'])[0] # Bounding box coordinates of detected objects
-            config.classes = self.interpreter.get_tensor(self.output_details[self.classes_idx]['index'])[0] # Class index of detected objects
-            config.scores = self.interpreter.get_tensor(self.output_details[self.scores_idx]['index'])[0] # Confidence
-        
+            boxes = self.interpreter.get_tensor(self.output_details[self.boxes_idx]['index'])[0] # Bounding box coordinates of detected objects
+            classes = self.interpreter.get_tensor(self.output_details[self.classes_idx]['index'])[0] # Class index of detected objects
+            scores = self.interpreter.get_tensor(self.output_details[self.scores_idx]['index'])[0] # Confidence
+            
+            kb.store('boxes', boxes)
+            kb.store('classes', classes)
+            kb.store('scores', scores)
+            
             # Get elapsed time for fps calc
             elapsed_time = time.time() - initial_time
-            config.fps = 1 / elapsed_time
-        
+            fps = 1 / elapsed_time
+            kb.store('fps', fps)
         return     
     
     def add_parser_params(self, parser):

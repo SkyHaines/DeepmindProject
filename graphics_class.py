@@ -1,38 +1,43 @@
-import kb
+import kbSingleton
 import cv2
 import os
 
 class Graphics():
-    
     def __init__(self):
-        
+        return
+    
+    def initialise(self):
+        kb = kbSingleton.kb_instance
         # Find and store labelmap to config
         CWD_PATH = os.getcwd()
-        PATH_TO_LABELS = os.path.join(CWD_PATH,kb.get(MODEL_NAME),kb.get(LABELMAP_NAME))
+        PATH_TO_LABELS = os.path.join(CWD_PATH,kb.get('modeldir'),'labelmap.txt')
         with open(PATH_TO_LABELS, 'r') as f:
             labels = [line.strip() for line in f.readlines()]
         if labels[0] == '???':
             del(labels[0])
-        kb.set(labels, labels)
+        kb.store('labels', labels)
         
         return
     
     def draw(self, frame):
+        self.initialise()
+        kb = kbSingleton.kb_instance
         # Retrieve data to draw with
-        interpreter = kb.get(interpreter)
+        interpreter = kb.get('interpreter')
         if interpreter is None:
             print("Interpreter not ready")
             return
         output_details = interpreter.get_output_details()
-        boxes = kb.get(boxes)
-        classes = kb.get(classes)
-        scores = kb.get(scores)
+        boxes = kb.get('boxes')
+        classes = kb.get('classes')
+        scores = kb.get('scores')
         if scores is None:
             print("Detection not ready")
             return
-        min_conf_threshold = kb.get(min_conf_threshold)
-        resW, resH = kb.get(resW), kb.get(resH)
-        imW, imH = kb.get(imW), kb.get(imH)
+        #min_conf_threshold = kb.get('threshold')
+        min_conf_threshold = 0.6
+        resW, resH = kb.get('resW'), kb.get('resH')
+        imW, imH = kb.get('imW'), kb.get('imH')
         
         # Loop over all detections and draw detection box if confidence is above minimum threshold
         for i in range(len(scores)):
@@ -47,7 +52,7 @@ class Graphics():
                 cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
 
                 # Draw label
-                object_name = kb.get(labels)[int(classes[i])] # Look up object name from "labels" array using class index
+                object_name = kb.get('labels')[int(classes[i])] # Look up object name from "labels" array using class index
                 label = '%s: %d%%' % (object_name, int(scores[i]*100)) # Example: 'person: 72%'
                 labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
                 label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
@@ -55,6 +60,6 @@ class Graphics():
                 cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
 
             # Draw framerate in corner of frame
-            cv2.putText(frame,'FPS: {0:.2f}'.format(config.fps),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
+            cv2.putText(frame,'FPS: {0:.2f}'.format(kb.get('fps')),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
         return frame
 
